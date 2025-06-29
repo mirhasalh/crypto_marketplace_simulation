@@ -203,6 +203,18 @@ class _TradePageState extends State<TradePage> {
   }
 
   void _onProceed() {
+    if (_tradeType == TradeType.sell) {
+      // Owned asset symbols
+      var owned = <String>[];
+      owned = _user.portfolio.split(',').map((e) => e.split(':')[0]).toList();
+      if (!owned.contains(kSymbols[widget.symbol]!['short'])) {
+        const emptyAsset = 'Asset isn\'t available';
+        final msg = ScaffoldMessenger.of(context);
+        msg.showSnackBar(const SnackBar(content: Text(emptyAsset)));
+        return;
+      }
+    }
+
     _atPrice = '${_prices.last}';
     _controller.animateToPage(1, duration: dur, curve: curve);
     setState(() => _counter = 45);
@@ -464,7 +476,7 @@ class _WillTrade extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = double.parse(amount) * double.parse(price);
-    var verb = tradeType == TradeType.buy ? 'buy' : 'sell';
+    var verb = tradeType == TradeType.buy ? 'pay' : 'get';
     return Text('You\'ll $verb ${moneyFormatter('$t')}');
   }
 }
