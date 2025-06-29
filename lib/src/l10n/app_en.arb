@@ -1,0 +1,10 @@
+{
+    "appTitle": "Simulation",
+    "@appTitle": {
+        "description": "The app title"
+    },
+    "createAccount": "Create account",
+    "@createAccount": {
+        "description": "A title for create account button"
+    }
+}
