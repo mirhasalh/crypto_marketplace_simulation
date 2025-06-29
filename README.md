@@ -14,7 +14,6 @@ In the end, your web/ directory may look like this:
 
 ```plaintext
 web/
-web/
 ├── favicon.png
 ├── index.html
 ├── manifest.json
