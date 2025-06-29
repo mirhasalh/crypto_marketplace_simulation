@@ -2,6 +2,10 @@
 
 A Flutter-based simulation of a cryptocurrency marketplace, designed to mimic real-time trading, asset tracking, and market dynamics. Ideal for educational purposes, prototyping, or exploring crypto trading UX without using real funds.
 
+## Demo
+
+Demo video: [YouTube](https://youtu.be/JkcmSJGByeY)
+
 ## Web local database requirements
 
 For the web, download [drift_worker.js](https://github.com/simolus3/drift/releases) and [sqlite3.wasm](https://github.com/simolus3/sqlite3.dart/releases), then place them in the web/ directory to enable local database functionality.
