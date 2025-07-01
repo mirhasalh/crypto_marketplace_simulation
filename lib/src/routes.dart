@@ -20,8 +20,10 @@ Route<dynamic> onGenerateRoute(RouteSettings settings) {
     case '/home':
       final args = settings.arguments as HomePageArgs;
       return MaterialPageRoute(
-        builder: (_) =>
-            NavPage(latestKnownPrices: args.latestKnownPrices, user: args.user),
+        builder: (_) => HomePage(
+          latestKnownPrices: args.latestKnownPrices,
+          user: args.user,
+        ),
       );
     default:
       return MaterialPageRoute(

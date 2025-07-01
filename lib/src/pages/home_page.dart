@@ -24,10 +24,10 @@ import '../typedefs.dart';
 import 'trade_page.dart' show TradePageArgs;
 import 'home_page_state.dart';
 
-class NavPage extends StatefulWidget {
+class HomePage extends StatefulWidget {
   static const routeName = '/home';
 
-  const NavPage({
+  const HomePage({
     super.key,
     required this.latestKnownPrices,
     required this.user,
@@ -37,10 +37,10 @@ class NavPage extends StatefulWidget {
   final User user;
 
   @override
-  State<NavPage> createState() => _NavPageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _NavPageState extends State<NavPage> {
+class _HomePageState extends State<HomePage> {
   final GlobalKey _sliverListKey = GlobalKey();
 
   late List<String> _topics; // [btcusdt@markPrice, bnbusdt@markPrice]

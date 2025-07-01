@@ -15,7 +15,7 @@ class LocaleProvider extends ChangeNotifier {
   }
 }
 
-final themeProvider = ChangeNotifierProvider((ref) => LocaleProvider());
+final themeProvider = ChangeNotifierProvider((ref) => ThemeProvider());
 
 class ThemeProvider extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
