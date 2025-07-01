@@ -3,14 +3,14 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../color_palette.dart';
 import '../extensions.dart';
-import '../../environments.dart';
 import '../constants.dart';
 import '../database/database.dart';
 import '../database_service.dart';
+import '../provider/providers.dart' show webSocketProvider;
 import '../shared/custom_line_chart.dart';
 import '../shared/num_pad.dart';
 import 'home_page_state.dart';
@@ -32,7 +32,7 @@ const interval = Duration(seconds: 1);
 const dur = Duration(milliseconds: 200);
 const curve = Curves.ease;
 
-class TradePage extends StatefulWidget {
+class TradePage extends ConsumerStatefulWidget {
   static const routeName = '/trade';
 
   const TradePage({
@@ -47,12 +47,10 @@ class TradePage extends StatefulWidget {
   final User user;
 
   @override
-  State<TradePage> createState() => _TradePageState();
+  ConsumerState<TradePage> createState() => _TradePageState();
 }
 
-class _TradePageState extends State<TradePage> {
-  late WebSocketChannel _channel;
-  late String _streamName;
+class _TradePageState extends ConsumerState<TradePage> {
   late List<double> _prices;
   late DateTime _openTime;
   late DateTime _tradeTime;
@@ -79,11 +77,6 @@ class _TradePageState extends State<TradePage> {
 
     _prices = widget.prices;
 
-    _streamName = getStreamName(widget.symbol, 'kline', _interval);
-    _channel = WebSocketChannel.connect(
-      Uri.parse('$kWssBaseUrl/stream?streams=$_streamName'),
-    );
-
     _user = widget.user;
 
     _controller = PageController();
@@ -91,21 +84,24 @@ class _TradePageState extends State<TradePage> {
 
   @override
   void dispose() {
-    _channel.sink.close();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final stream = ref.watch(webSocketProvider);
     final short = kSymbols[widget.symbol]!['short']!.toUpperCase();
 
     return StreamBuilder(
-      stream: _channel.stream,
+      stream: stream,
       builder: (context, snapshot) {
         if (snapshot.hasData && mounted) {
-          final decoded = json.decode(snapshot.data);
-          final c = double.parse('${decoded['data']['k']['c']}');
-          _onTick(c);
+          final decoded = json.decode(snapshot.data!);
+          if (widget.symbol == decoded['data']['s']) {
+            final p = double.parse('${decoded['data']['p']}');
+            if (mounted) _onTick(p);
+          }
         }
 
         return Scaffold(

@@ -1,19 +1,17 @@
 import 'dart:convert';
 
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollview_observer/scrollview_observer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:web_socket_channel/io.dart';
 
-import '../../environments.dart';
 import '../apis.dart';
 import '../constants.dart';
 import '../database/database.dart';
 import '../l10n/app_localizations.dart';
 import '../models/mark_price.dart';
+import '../provider/providers.dart' show webSocketProvider;
 import '../shared/allocations.dart';
 import '../shared/asset_list_tile.dart';
 import '../shared/divider_bar.dart';
@@ -24,7 +22,7 @@ import '../typedefs.dart';
 import 'trade_page.dart' show TradePageArgs;
 import 'home_page_state.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   static const routeName = '/home';
 
   const HomePage({
@@ -37,17 +35,16 @@ class HomePage extends StatefulWidget {
   final User user;
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> {
   final GlobalKey _sliverListKey = GlobalKey();
 
   late List<String> _topics; // [btcusdt@markPrice, bnbusdt@markPrice]
   late PageController _pageViewController;
   late User _user;
   late SliverObserverController _observerController;
-  late WebSocketChannel _channel;
   late Map<String, List<dynamic>> _klines;
   late DateTime _openTime;
 
@@ -78,14 +75,8 @@ class _HomePageState extends State<HomePage> {
       controller: scrollController,
     );
 
-    var uri = Uri.parse(
-      '$kWssBaseUrl/stream?streams=${_topics.reversed.join('/')}',
-    );
-    if (kIsWeb) {
-      _channel = WebSocketChannel.connect(uri);
-    } else {
-      _channel = IOWebSocketChannel.connect(uri);
-    }
+    _user = widget.user;
+    _openTime = DateTime.now();
 
     ambiguate(WidgetsBinding.instance)?.addPostFrameCallback((_) {
       _observerController.dispatchOnceObserve(sliverContext: _sliverListCtx!);
@@ -96,15 +87,12 @@ class _HomePageState extends State<HomePage> {
     // into view and remain unpopulated.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _onChildIndex(List.generate(kAvailablePairs.length, (i) => i));
+      ref.read(webSocketProvider.notifier).connectToTopics(_topics);
     });
-
-    _user = widget.user;
-    _openTime = DateTime.now();
   }
 
   @override
   void dispose() {
-    _channel.sink.close();
     _observerController.controller?.dispose();
     _pageViewController.dispose();
     super.dispose();
@@ -112,6 +100,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final stream = ref.watch(webSocketProvider);
     final l10n = AppLocalizations.of(context)!;
     final colors = Theme.of(context).colorScheme;
     final buttonStyle = TextButton.styleFrom(
@@ -120,10 +109,10 @@ class _HomePageState extends State<HomePage> {
     );
 
     return StreamBuilder(
-      stream: _channel.stream,
+      stream: stream,
       builder: (context, snapshot) {
         if (snapshot.hasData && _prices.isNotEmpty && _klines.isNotEmpty) {
-          final decoded = json.decode(snapshot.data);
+          final decoded = json.decode(snapshot.data!);
           final data = MarkPrice.fromJson(decoded['data']);
           _onTick(data);
         }
